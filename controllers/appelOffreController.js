@@ -151,3 +151,25 @@ exports.getStatistics = async (req, res) => {
   }
 };
 
+//Obtenir les details
+exports.getAppelOffreById= async (req, res) => {
+  try {
+    const { id } = req.params;
+    const appelOffre = await AppelOffre.getById(id);
+    
+    if (!appelOffre) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appel d\'offre non trouvé'
+      });
+    }
+    
+    res.json(appelOffre);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
