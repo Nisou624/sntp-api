@@ -15,7 +15,8 @@
     "db:test": "node scripts/testConnection.js",
     "db:sync": "node scripts/syncDatabase.js",
     "db:import": "node migration/importFromJSON.js",
-    "db:reset": "node scripts/resetDatabase.js"
+    "db:reset": "node scripts/resetDatabase.js",
+    "migrate-pdf": "node scripts/migratePDFtoBase64.js"
   },
   "keywords": [
     "api",
@@ -29,6 +30,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-validator": "^7.3.1",
+    "helmet": "^8.1.0",
     "jest": "^30.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.0.1",
