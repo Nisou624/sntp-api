@@ -3,13 +3,20 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+// Importer la configuration de la base de données
+const { testConnection, syncDatabase } = require('./config/db');
+
+// Importer les routes
 const authRoutes = require('./routes/auth');
 const appelsOffresRoutes = require('./routes/appelsOffres');
 
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -22,7 +29,11 @@ app.use('/api/appels-offres', appelsOffresRoutes);
 
 // Route de test
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'API SNTP fonctionne correctement' });
+  res.json({ 
+    status: 'OK', 
+    message: 'API SNTP fonctionne correctement',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Gestion des erreurs 404
@@ -35,7 +46,7 @@ app.use((req, res) => {
 
 // Gestion des erreurs globales
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Erreur globale:', err.stack);
   
   // Erreur Multer
   if (err.code === 'LIMIT_FILE_SIZE') {
@@ -47,17 +58,58 @@ app.use((err, req, res, next) => {
 
   res.status(500).json({ 
     success: false, 
-    message: 'Erreur serveur interne' 
+    message: 'Erreur serveur interne',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 
-// Démarrer le serveur seulement si ce n'est pas un test
-if (process.env.NODE_ENV !== 'test') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-  });
-}
+// Fonction pour initialiser le serveur
+const initializeServer = async () => {
+  try {
+    // 1. Tester la connexion à la base de données
+    console.log('📡 Test de connexion à la base de données...');
+    const connected = await testConnection();
+    
+    if (!connected) {
+      console.error('❌ Impossible de se connecter à la base de données');
+      console.log('💡 Vérifiez votre fichier .env et que MySQL est lancé');
+      process.exit(1);
+    }
+
+    // 2. Synchroniser les modèles avec la base de données
+    console.log('🔄 Synchronisation des modèles...');
+    await syncDatabase(false); // false = ne pas supprimer les données existantes
+
+    // 3. Démarrer le serveur
+    if (process.env.NODE_ENV !== 'test') {
+      const PORT = process.env.PORT || 5000;
+      app.listen(PORT, () => {
+        console.log('\n' + '='.repeat(60));
+        console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+        console.log(`📍 API URL: http://localhost:${PORT}/api`);
+        console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
+        console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
+        console.log('='.repeat(60) + '\n');
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'initialisation du serveur:', error);
+    process.exit(1);
+  }
+};
+
+// Démarrer le serveur
+initializeServer();
+
+// Gestion de l'arrêt propre
+process.on('SIGINT', async () => {
+  console.log('\n⏳ Arrêt du serveur...');
+  const { sequelize } = require('./config/db');
+  await sequelize.close();
+  console.log('✅ Connexion à la base de données fermée');
+  process.exit(0);
+});
 
 module.exports = app;
 
