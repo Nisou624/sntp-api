@@ -1,97 +1,39 @@
 const jwt = require('jsonwebtoken');
-const Admin = require('../models/Admin');
 
-// Middleware de protection des routes
-exports.proteger = async (req, res, next) => {
+const authMiddleware = (req, res, next) => {
   try {
-    let token;
-
-    // Récupérer le token depuis les headers
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-
-    // Vérifier si le token existe
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'Accès non autorisé. Token manquant.'
+    // Récupérer le token du header
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Token d\'authentification manquant' 
       });
     }
 
-    try {
-      // Vérifier le token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const token = authHeader.split(' ')[1];
 
-      // Trouver l'utilisateur
-      req.admin = await Admin.findById(decoded.id).select('-motDePasse');
-
-      if (!req.admin) {
-        return res.status(401).json({
-          success: false,
-          message: 'Utilisateur non trouvé.'
-        });
-      }
-
-      // Vérifier si l'admin est actif
-      if (!req.admin.actif) {
-        return res.status(403).json({
-          success: false,
-          message: 'Compte désactivé.'
-        });
-      }
-
-      // Vérifier si le compte est verrouillé
-      if (req.admin.dateVerrouillage && req.admin.dateVerrouillage > Date.now()) {
-        return res.status(403).json({
-          success: false,
-          message: 'Compte temporairement verrouillé. Réessayez plus tard.'
-        });
-      }
-
-      next();
-    } catch (error) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token invalide ou expiré.'
-      });
-    }
+    // Vérifier le token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Attacher les infos utilisateur à la requête
+    req.user = decoded;
+    next();
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Erreur serveur lors de l\'authentification.',
-      error: error.message
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Token expiré' 
+      });
+    }
+    
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Token invalide' 
     });
   }
 };
 
-// Middleware pour autoriser certains rôles
-exports.autoriser = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.admin.role)) {
-      return res.status(403).json({
-        success: false,
-        message: `Le rôle ${req.admin.role} n'est pas autorisé à accéder à cette ressource.`
-      });
-    }
-    next();
-  };
-};
-
-// Middleware pour vérifier les permissions spécifiques
-exports.verifierPermission = (permission) => {
-  return (req, res, next) => {
-    if (req.admin.role === 'super_admin') {
-      return next();
-    }
-
-    if (!req.admin.permissions || !req.admin.permissions.includes(permission)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Vous n\'avez pas la permission requise pour cette action.'
-      });
-    }
-    next();
-  };
-};
+module.exports = authMiddleware;
 

@@ -63,9 +63,9 @@ exports.inscription = async (req, res) => {
 };
 
 // @desc    Connexion d'un admin
-// @route   POST /api/auth/connexion
+// @route   POST /api/auth/login
 // @access  Public
-exports.connexion = async (req, res) => {
+exports.login = async (req, res) => {
   try {
     const { email, motDePasse } = req.body;
 

@@ -4,18 +4,34 @@
   "description": "Backend API pour le site web SNTP",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "NODE_ENV=test jest --verbose --detectOpenHandles --forceExit",
+    "test:watch": "NODE_ENV=test jest --watch --verbose",
+    "test:coverage": "NODE_ENV=test jest --coverage --verbose",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "generate-hash": "node helper/generateAdminPassword.js"
   },
-  "keywords": ["api", "sntp"],
+  "keywords": [
+    "api",
+    "sntp"
+  ],
   "author": "Nisou624",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-validator": "^7.3.1",
+    "jest": "^30.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.0.1",
+    "multer": "^2.0.2",
     "mysql2": "^3.15.3",
+    "supertest": "^7.1.4"
+  },
+  "devDependencies": {
     "nodemon": "^3.1.11"
   }
 }
