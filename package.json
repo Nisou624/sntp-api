@@ -16,10 +16,10 @@
     "db:sync": "node scripts/syncDatabase.js",
     "db:import": "node migration/importFromJSON.js",
     "db:reset": "node scripts/resetDatabase.js",
-    "migrate-pdf": "node scripts/migratePDFtoBase64.js",
     "check:statut": "node scripts/check-statut-values.js",
     "migrate:statut": "node migration/fix-statut-enum.js",
-    "migrate": "node scripts/migrate.js"
+    "migrate": "node scripts/migrate.js",
+    "db:migrate:pdf": "node scripts/migratePDFtoDatabase.js"
   },
   "keywords": [
     "api",

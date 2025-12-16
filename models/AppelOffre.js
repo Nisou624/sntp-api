@@ -46,11 +46,11 @@ const AppelOffre = sequelize.define('AppelOffre', {
     field: 'date_echeance',
     validate: {
       isDate: {
-        msg: 'Date d\'échéance invalide'
+        msg: "Date d'échéance invalide"
       },
       isAfterPublication(value) {
         if (this.datePublication && new Date(value) <= new Date(this.datePublication)) {
-          throw new Error('La date d\'échéance doit être après la date de publication');
+          throw new Error("La date d'échéance doit être après la date de publication");
         }
       }
     }
@@ -101,15 +101,38 @@ const AppelOffre = sequelize.define('AppelOffre', {
       }
     }
   },
-  pdfPath: {
-    type: DataTypes.STRING(500),
+  // Nouvelles colonnes pour stocker le PDF dans la BDD
+  pdfData: {
+    type: DataTypes.BLOB('long'),
     allowNull: true,
-    field: 'pdf_path'
+    field: 'pdf_data',
+    comment: 'Contenu binaire du fichier PDF'
+  },
+  pdfSize: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'pdf_size',
+    comment: 'Taille du fichier en octets'
+  },
+  pdfMimeType: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    field: 'pdf_mime_type',
+    defaultValue: 'application/pdf',
+    comment: 'Type MIME du fichier'
   },
   pdfOriginalName: {
     type: DataTypes.STRING(255),
     allowNull: true,
-    field: 'pdf_original_name'
+    field: 'pdf_original_name',
+    comment: 'Nom original du fichier'
+  },
+  // Ancienne colonne (conservée pour compatibilité temporaire)
+  pdfPath: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    field: 'pdf_path',
+    comment: 'Ancien chemin - déprécié'
   }
 }, {
   tableName: 'appels_offres',
@@ -137,7 +160,7 @@ const AppelOffre = sequelize.define('AppelOffre', {
   ]
 });
 
-// Méthodes d'instance
+// Méthode d'instance pour formater la réponse JSON
 AppelOffre.prototype.toJSON = function() {
   const values = { ...this.get() };
   
@@ -156,8 +179,8 @@ AppelOffre.prototype.toJSON = function() {
     values.updatedAt = new Date(values.updated_at).toISOString();
     delete values.updated_at;
   }
-  
-  // Renommer les champs pour correspondre au format camelCase
+
+  // Renommer les champs pour camelCase
   if (values.date_publication) {
     values.datePublication = new Date(values.date_publication).toISOString();
     delete values.date_publication;
@@ -166,31 +189,48 @@ AppelOffre.prototype.toJSON = function() {
     values.dateEcheance = new Date(values.date_echeance).toISOString();
     delete values.date_echeance;
   }
-  if (values.pdf_path) {
-    values.pdfPath = values.pdf_path;
-    delete values.pdf_path;
+  
+  // Gérer les champs PDF
+  if (values.pdf_data) {
+    values.pdfData = values.pdf_data;
+    delete values.pdf_data;
+  }
+  if (values.pdf_size) {
+    values.pdfSize = values.pdf_size;
+    delete values.pdf_size;
+  }
+  if (values.pdf_mime_type) {
+    values.pdfMimeType = values.pdf_mime_type;
+    delete values.pdf_mime_type;
   }
   if (values.pdf_original_name) {
     values.pdfOriginalName = values.pdf_original_name;
     delete values.pdf_original_name;
   }
-  
+  if (values.pdf_path) {
+    values.pdfPath = values.pdf_path;
+    delete values.pdf_path;
+  }
+
+  // Ne pas exposer le contenu binaire du PDF dans le JSON
+  if (values.pdfData) {
+    values.hasPdf = true;
+    delete values.pdfData;
+  } else {
+    values.hasPdf = false;
+  }
+
   return values;
 };
 
-// Méthodes statiques (classe)
+// Méthodes statiques
 AppelOffre.getStatistics = async function() {
   const total = await this.count();
   const actifs = await this.count({ where: { statut: 'actif' } });
   const expires = await this.count({ where: { statut: 'expire' } });
   const annules = await this.count({ where: { statut: 'annule' } });
-  
-  return {
-    total,
-    actifs,
-    expires,
-    annules
-  };
+
+  return { total, actifs, expires, annules };
 };
 
 module.exports = AppelOffre;
