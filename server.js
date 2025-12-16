@@ -9,6 +9,7 @@ const { testConnection, syncDatabase } = require('./config/db');
 // Importer les routes
 const authRoutes = require('./routes/auth');
 const appelsOffresRoutes = require('./routes/appelsOffres');
+const projetsRoutes = require('./routes/projets');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/appels-offres', appelsOffresRoutes);
+app.use('/api/projets', projetsRoutes);
 
 // Route de test
 app.get('/api/health', (req, res) => {

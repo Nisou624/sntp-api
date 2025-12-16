@@ -1,0 +1,57 @@
+// routes/projets.js
+const express = require('express');
+const router = express.Router();
+const { body } = require('express-validator');
+const authMiddleware = require('../middleware/auth');
+const projetController = require('../controllers/projetController');
+
+// GET - Obtenir tous les projets (public)
+router.get('/', projetController.getAllProjets);
+
+// GET - Obtenir un projet par ID (public)
+router.get('/:id', projetController.getProjetById);
+
+// POST - Créer un nouveau projet (protégé)
+router.post(
+  '/',
+  authMiddleware,
+  [
+    body('titre').trim().notEmpty().withMessage('Le titre est requis'),
+    body('category').isIn(['routes', 'batiments', 'ouvrages', 'hydraulique', 'industriel']).withMessage('Catégorie invalide'),
+    body('image').trim().notEmpty().withMessage('L\'image est requise'),
+    body('location').trim().notEmpty().withMessage('La localisation est requise'),
+    body('year').trim().notEmpty().withMessage('L\'année est requise'),
+    body('description').trim().notEmpty().withMessage('La description est requise'),
+    body('status').optional().isIn(['completed', 'in_progress']).withMessage('Statut invalide'),
+    body('latitude').optional().isFloat({ min: -90, max: 90 }).withMessage('Latitude invalide'),
+    body('longitude').optional().isFloat({ min: -180, max: 180 }).withMessage('Longitude invalide')
+  ],
+  projetController.createProjet
+);
+
+// PUT - Mettre à jour un projet (protégé)
+router.put(
+  '/:id',
+  authMiddleware,
+  [
+    body('titre').optional().trim().notEmpty().withMessage('Le titre ne peut pas être vide'),
+    body('category').optional().isIn(['routes', 'batiments', 'ouvrages', 'hydraulique', 'industriel']).withMessage('Catégorie invalide'),
+    body('image').optional().trim().notEmpty().withMessage('L\'image ne peut pas être vide'),
+    body('location').optional().trim().notEmpty().withMessage('La localisation ne peut pas être vide'),
+    body('year').optional().trim().notEmpty().withMessage('L\'année ne peut pas être vide'),
+    body('description').optional().trim().notEmpty().withMessage('La description ne peut pas être vide'),
+    body('status').optional().isIn(['completed', 'in_progress']).withMessage('Statut invalide'),
+    body('latitude').optional().isFloat({ min: -90, max: 90 }).withMessage('Latitude invalide'),
+    body('longitude').optional().isFloat({ min: -180, max: 180 }).withMessage('Longitude invalide')
+  ],
+  projetController.updateProjet
+);
+
+// DELETE - Supprimer un projet (protégé)
+router.delete('/:id', authMiddleware, projetController.deleteProjet);
+
+// GET - Obtenir les statistiques (protégé)
+router.get('/admin/statistics', authMiddleware, projetController.getStatistics);
+
+module.exports = router;
+
