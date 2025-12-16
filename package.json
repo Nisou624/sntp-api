@@ -16,7 +16,10 @@
     "db:sync": "node scripts/syncDatabase.js",
     "db:import": "node migration/importFromJSON.js",
     "db:reset": "node scripts/resetDatabase.js",
-    "migrate-pdf": "node scripts/migratePDFtoBase64.js"
+    "migrate-pdf": "node scripts/migratePDFtoBase64.js",
+    "check:statut": "node scripts/check-statut-values.js",
+    "migrate:statut": "node migration/fix-statut-enum.js",
+    "migrate": "node scripts/migrate.js"
   },
   "keywords": [
     "api",
@@ -34,6 +37,7 @@
     "jest": "^30.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.0.1",
+    "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "mysql2": "^3.15.3",
     "sequelize": "^6.37.7",
