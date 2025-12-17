@@ -1,3 +1,4 @@
+// config/db.js
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
@@ -35,7 +36,10 @@ const testConnection = async () => {
 // Synchroniser les modèles avec la base de données
 const syncDatabase = async (force = false) => {
   try {
-    await sequelize.sync({ force: force, alter: !force && env === 'development' });
+    await sequelize.sync({ 
+      force: force, 
+      alter: !force && env === 'development' 
+    });
     console.log(`✅ Base de données synchronisée ${force ? '(tables recréées)' : '(structure mise à jour)'}`);
   } catch (error) {
     console.error('❌ Erreur lors de la synchronisation:', error);
@@ -43,10 +47,11 @@ const syncDatabase = async (force = false) => {
   }
 };
 
+// ⚠️ IMPORTANT: Exporter l'instance sequelize ET les fonctions
 module.exports = {
-  sequelize,
+  sequelize,      // Instance Sequelize
   testConnection,
   syncDatabase,
-  Sequelize
+  Sequelize       // Classe Sequelize pour les types
 };
 

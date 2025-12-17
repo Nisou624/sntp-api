@@ -11,7 +11,8 @@ const { testConnection, syncDatabase } = require('./config/db');
 const authRoutes = require('./routes/auth');
 const appelsOffresRoutes = require('./routes/appelsOffres');
 const projetsRoutes = require('./routes/projets');
-const candidatureRoutes = require('./routes/candidature'); // NOUVEAU
+const candidatureRoutes = require('./routes/candidature');
+const articlesRoutes = require('./routes/articles');
 
 const app = express();
 
@@ -30,7 +31,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/appels-offres', appelsOffresRoutes);
 app.use('/api/projets', projetsRoutes);
-app.use('/api', candidatureRoutes); // NOUVEAU - Route pour candidature
+app.use('/api', candidatureRoutes);
+app.use('/api/articles', articlesRoutes);
 
 // Route de test
 app.get('/api/health', (req, res) => {
