@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -10,6 +11,7 @@ const { testConnection, syncDatabase } = require('./config/db');
 const authRoutes = require('./routes/auth');
 const appelsOffresRoutes = require('./routes/appelsOffres');
 const projetsRoutes = require('./routes/projets');
+const candidatureRoutes = require('./routes/candidature'); // NOUVEAU
 
 const app = express();
 
@@ -28,11 +30,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/appels-offres', appelsOffresRoutes);
 app.use('/api/projets', projetsRoutes);
+app.use('/api', candidatureRoutes); // NOUVEAU - Route pour candidature
 
 // Route de test
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     message: 'API SNTP fonctionne correctement',
     timestamp: new Date().toISOString()
   });
@@ -40,26 +43,26 @@ app.get('/api/health', (req, res) => {
 
 // Gestion des erreurs 404
 app.use((req, res) => {
-  res.status(404).json({ 
-    success: false, 
-    message: 'Route non trouvée' 
+  res.status(404).json({
+    success: false,
+    message: 'Route non trouvée'
   });
 });
 
 // Gestion des erreurs globales
 app.use((err, req, res, next) => {
   console.error('Erreur globale:', err.stack);
-  
+
   // Erreur Multer
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       success: false,
-      message: 'Le fichier est trop volumineux (max 10MB)'
+      message: 'Le fichier est trop volumineux (max 3MB)'
     });
   }
 
-  res.status(500).json({ 
-    success: false, 
+  res.status(500).json({
+    success: false,
     message: 'Erreur serveur interne',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
@@ -69,32 +72,31 @@ app.use((err, req, res, next) => {
 const initializeServer = async () => {
   try {
     // 1. Tester la connexion à la base de données
-    console.log('📡 Test de connexion à la base de données...');
+    console.log('Test de connexion à la base de données...');
     const connected = await testConnection();
     
     if (!connected) {
       console.error('❌ Impossible de se connecter à la base de données');
-      console.log('💡 Vérifiez votre fichier .env et que MySQL est lancé');
+      console.log('Vérifiez votre fichier .env et que MySQL est lancé');
       process.exit(1);
     }
 
     // 2. Synchroniser les modèles avec la base de données
-    console.log('🔄 Synchronisation des modèles...');
+    console.log('Synchronisation des modèles...');
     await syncDatabase(false); // false = ne pas supprimer les données existantes
 
     // 3. Démarrer le serveur
     if (process.env.NODE_ENV !== 'test') {
       const PORT = process.env.PORT || 5000;
       app.listen(PORT, () => {
-        console.log('\n' + '='.repeat(60));
-        console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-        console.log(`📍 API URL: http://localhost:${PORT}/api`);
-        console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
+        console.log('='.repeat(60));
+        console.log(`✅ Serveur démarré sur le port ${PORT}`);
+        console.log(`📡 API URL: http://localhost:${PORT}/api`);
+        console.log(`💚 Health check: http://localhost:${PORT}/api/health`);
         console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
-        console.log('='.repeat(60) + '\n');
+        console.log('='.repeat(60));
       });
     }
-
   } catch (error) {
     console.error('❌ Erreur lors de l\'initialisation du serveur:', error);
     process.exit(1);
@@ -106,7 +108,7 @@ initializeServer();
 
 // Gestion de l'arrêt propre
 process.on('SIGINT', async () => {
-  console.log('\n⏳ Arrêt du serveur...');
+  console.log('\n🛑 Arrêt du serveur...');
   const { sequelize } = require('./config/db');
   await sequelize.close();
   console.log('✅ Connexion à la base de données fermée');
