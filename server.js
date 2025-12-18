@@ -45,24 +45,21 @@ app.get('/api/health', (req, res) => {
 
 // Gestion des erreurs 404
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route non trouvée'
-  });
+  res.status(404).json({ success: false, message: 'Route non trouvée' });
 });
 
 // Gestion des erreurs globales
 app.use((err, req, res, next) => {
   console.error('Erreur globale:', err.stack);
-
+  
   // Erreur Multer
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       success: false,
-      message: 'Le fichier est trop volumineux (max 3MB)'
+      message: 'Le fichier est trop volumineux (max 5MB)'
     });
   }
-
+  
   res.status(500).json({
     success: false,
     message: 'Erreur serveur interne',
@@ -76,7 +73,6 @@ const initializeServer = async () => {
     // 1. Tester la connexion à la base de données
     console.log('Test de connexion à la base de données...');
     const connected = await testConnection();
-    
     if (!connected) {
       console.error('❌ Impossible de se connecter à la base de données');
       console.log('Vérifiez votre fichier .env et que MySQL est lancé');
@@ -92,9 +88,9 @@ const initializeServer = async () => {
       const PORT = process.env.PORT || 5000;
       app.listen(PORT, () => {
         console.log('='.repeat(60));
-        console.log(`✅ Serveur démarré sur le port ${PORT}`);
+        console.log(`🚀 Serveur démarré sur le port ${PORT}`);
         console.log(`📡 API URL: http://localhost:${PORT}/api`);
-        console.log(`💚 Health check: http://localhost:${PORT}/api/health`);
+        console.log(`❤️  Health check: http://localhost:${PORT}/api/health`);
         console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
         console.log('='.repeat(60));
       });
@@ -111,7 +107,7 @@ initializeServer();
 // Gestion de l'arrêt propre
 process.on('SIGINT', async () => {
   console.log('\n🛑 Arrêt du serveur...');
-  const { sequelize } = require('./config/db');
+  const sequelize = require('./config/db');
   await sequelize.close();
   console.log('✅ Connexion à la base de données fermée');
   process.exit(0);

@@ -1,61 +1,66 @@
 // middleware/auth.js
 const jwt = require('jsonwebtoken');
 
-const authMiddleware = async (req, res, next) => {
+const authMiddleware = (req, res, next) => {
   try {
     // Récupérer le token depuis le header Authorization
     const authHeader = req.headers.authorization;
     
-    if (!authHeader) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token manquant'
+    console.log('🔐 Auth Header:', authHeader ? 'Présent' : 'Absent');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('❌ Token manquant ou format incorrect');
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Token manquant. Veuillez vous connecter.' 
       });
     }
-
-    // Vérifier le format "Bearer TOKEN"
-    if (!authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'Format du token invalide'
-      });
-    }
-
-    // Extraire le token
-    const token = authHeader.substring(7); // Enlever "Bearer "
-
+    
+    // Extraire le token (enlever "Bearer ")
+    const token = authHeader.substring(7);
+    
+    console.log('🔑 Token reçu:', token ? token.substring(0, 20) + '...' : 'null');
+    console.log('🔒 JWT_SECRET:', process.env.JWT_SECRET ? 'Défini' : 'Non défini');
+    
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token manquant'
+      console.log('❌ Token vide après extraction');
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Token manquant' 
       });
     }
-
+    
     // Vérifier le token
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded; // Ajouter les infos utilisateur à la requête
-      next();
-    } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        return res.status(401).json({
-          success: false,
-          message: 'Token expiré'
-        });
-      }
-      return res.status(401).json({
-        success: false,
-        message: 'Token invalide'
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    console.log('✅ Token valide pour:', decoded);
+    
+    // Ajouter les infos de l'utilisateur à la requête
+    req.user = decoded;
+    
+    next();
+  } catch (error) {
+    console.error('❌ Erreur d\'authentification:', error.message);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Token invalide' 
       });
     }
-  } catch (error) {
-    console.error('Erreur dans le middleware auth:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Erreur serveur lors de la vérification du token'
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Token expiré. Veuillez vous reconnecter.' 
+      });
+    }
+    
+    res.status(401).json({ 
+      success: false, 
+      message: 'Erreur d\'authentification' 
     });
   }
 };
 
 module.exports = authMiddleware;
-
