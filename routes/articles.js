@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const authMiddleware = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const articleController = require('../controllers/articleController');
 
 // GET - Obtenir tous les articles (public)
@@ -17,7 +17,7 @@ router.get('/slug/:slug', articleController.getArticleBySlug);
 // POST - Créer un nouvel article (protégé)
 router.post(
   '/',
-  authMiddleware,
+  authenticateToken,
   [
     body('titre').trim().notEmpty().withMessage('Le titre est requis'),
     body('slug').trim().notEmpty().withMessage('Le slug est requis'),
@@ -32,7 +32,7 @@ router.post(
 // PUT - Mettre à jour un article (protégé)
 router.put(
   '/:id',
-  authMiddleware,
+  authenticateToken,
   [
     body('titre').optional().trim().notEmpty().withMessage('Le titre ne peut pas être vide'),
     body('slug').optional().trim().notEmpty().withMessage('Le slug ne peut pas être vide'),
@@ -45,10 +45,10 @@ router.put(
 );
 
 // DELETE - Supprimer un article (protégé)
-router.delete('/:id', authMiddleware, articleController.deleteArticle);
+router.delete('/:id', authenticateToken, articleController.deleteArticle);
 
 // GET - Obtenir les statistiques (protégé)
-router.get('/admin/statistics', authMiddleware, articleController.getStatistics);
+router.get('/admin/statistics', authenticateToken, articleController.getStatistics);
 
 module.exports = router;
 

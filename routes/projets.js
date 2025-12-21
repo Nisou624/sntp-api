@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const authMiddleware = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const projetController = require('../controllers/projetController');
 const uploadImage = require('../config/multerImages'); // Import du nouveau multer
 
@@ -18,7 +18,7 @@ router.get('/:id/image', projetController.downloadImage);
 // POST - Créer un nouveau projet (protégé)
 router.post(
   '/',
-  authMiddleware,
+  authenticateToken,
   uploadImage.single('image'), // Multer pour gérer l'upload d'image
   [
     body('titre').trim().notEmpty().withMessage('Le titre est requis'),
@@ -36,7 +36,7 @@ router.post(
 // PUT - Mettre à jour un projet (protégé)
 router.put(
   '/:id',
-  authMiddleware,
+  authenticateToken,
   uploadImage.single('image'), // Multer pour gérer l'upload d'image
   [
     body('titre').optional().trim().notEmpty().withMessage('Le titre ne peut pas être vide'),
@@ -52,9 +52,9 @@ router.put(
 );
 
 // DELETE - Supprimer un projet (protégé)
-router.delete('/:id', authMiddleware, projetController.deleteProjet);
+router.delete('/:id', authenticateToken, projetController.deleteProjet);
 
 // GET - Obtenir les statistiques (protégé)
-router.get('/admin/statistics', authMiddleware, projetController.getStatistics);
+router.get('/admin/statistics', authenticateToken, projetController.getStatistics);
 
 module.exports = router;

@@ -13,6 +13,8 @@ const appelsOffresRoutes = require('./routes/appelsOffres');
 const projetsRoutes = require('./routes/projets');
 const candidatureRoutes = require('./routes/candidature');
 const articlesRoutes = require('./routes/articles');
+const mentionMediasRoutes = require('./routes/mentionMedias');
+const imagesRoutes = require('./routes/images');
 
 const app = express();
 
@@ -33,6 +35,8 @@ app.use('/api/appels-offres', appelsOffresRoutes);
 app.use('/api/projets', projetsRoutes);
 app.use('/api', candidatureRoutes);
 app.use('/api/articles', articlesRoutes);
+app.use('/api/mentions-medias', mentionMediasRoutes);
+app.use('/api/images', imagesRoutes);
 
 // Route de test
 app.get('/api/health', (req, res) => {
