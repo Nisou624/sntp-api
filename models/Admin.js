@@ -1,118 +1,107 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
+const sequelize = require('../config/database');
 
-const adminSchema = new mongoose.Schema({
+const Admin = sequelize.define('Admin', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   nom: {
-    type: String,
-    required: true,
-    trim: true
+    type: DataTypes.STRING(100),
+    allowNull: true
   },
   prenom: {
-    type: String,
-    required: true,
-    trim: true
+    type: DataTypes.STRING(100),
+    allowNull: true
   },
   email: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING(255),
     unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Email invalide']
+    allowNull: false,
+    validate: {
+      isEmail: true
+    }
   },
   motDePasse: {
-    type: String,
-    required: true,
-    minlength: 8
+    type: DataTypes.STRING(255),
+    allowNull: false
   },
   role: {
-    type: String,
-    enum: ['super_admin', 'admin', 'editeur', 'lecteur'],
-    default: 'editeur'
+    type: DataTypes.ENUM('super_admin', 'admin', 'editeur'),
+    defaultValue: 'admin'
   },
   telephone: {
-    type: String
+    type: DataTypes.STRING(20),
+    allowNull: true
   },
   service: {
-    type: String
+    type: DataTypes.STRING(100),
+    allowNull: true
   },
   avatar: {
-    type: String
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  permissions: {
+    type: DataTypes.JSON,
+    defaultValue: []
   },
   actif: {
-    type: Boolean,
-    default: true
-  },
-  derniereConnexion: {
-    type: Date
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   },
   tentativesConnexion: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
   dateVerrouillage: {
-    type: Date
+    type: DataTypes.DATE,
+    allowNull: true
   },
-  tokenResetPassword: String,
-  tokenResetPasswordExpire: Date,
-  permissions: [{
-    type: String,
-    enum: ['creer', 'modifier', 'supprimer', 'publier', 'voir_stats']
-  }]
+  derniereConnexion: {
+    type: DataTypes.DATE,
+    allowNull: true
+  }
 }, {
-  timestamps: true
+  tableName: 'admins',
+  timestamps: true,
+  hooks: {
+    beforeCreate: async (admin) => {
+      // Ne hasher QUE si le mot de passe n'est PAS déjà un hash bcrypt
+      if (admin.motDePasse && !admin.motDePasse.startsWith('$2b$') && !admin.motDePasse.startsWith('$2a$')) {
+        admin.motDePasse = await bcrypt.hash(admin.motDePasse, 10);
+      }
+    },
+    beforeUpdate: async (admin) => {
+      // Ne hasher que si le mot de passe a changé ET n'est pas déjà hashé
+      if (admin.changed('motDePasse') && !admin.motDePasse.startsWith('$2b$') && !admin.motDePasse.startsWith('$2a$')) {
+        admin.motDePasse = await bcrypt.hash(admin.motDePasse, 10);
+      }
+    }
+  }
 });
 
-// Hash du mot de passe avant sauvegarde
-adminSchema.pre('save', async function(next) {
-  if (!this.isModified('motDePasse')) {
-    return next();
-  }
-  
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.motDePasse = await bcrypt.hash(this.motDePasse, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Méthode pour comparer les mots de passe
-adminSchema.methods.comparerMotDePasse = async function(motDePasseCandidat) {
-  return await bcrypt.compare(motDePasseCandidat, this.motDePasse);
+// Méthode pour comparer le mot de passe
+Admin.prototype.comparerMotDePasse = async function(motDePasse) {
+  return await bcrypt.compare(motDePasse, this.motDePasse);
 };
 
-// Méthode pour générer un token de réinitialisation
-adminSchema.methods.genererTokenReset = function() {
-  const crypto = require('crypto');
-  const resetToken = crypto.randomBytes(32).toString('hex');
-  
-  this.tokenResetPassword = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
-  
-  this.tokenResetPasswordExpire = Date.now() + 3600000; // 1 heure
-  
-  return resetToken;
-};
-
-// Méthode pour incrémenter les tentatives de connexion
-adminSchema.methods.incrementerTentatives = function() {
+// Méthode pour incrémenter les tentatives
+Admin.prototype.incrementerTentatives = async function() {
   this.tentativesConnexion += 1;
   if (this.tentativesConnexion >= 5) {
-    this.dateVerrouillage = Date.now() + 1800000; // Verrouillage 30 minutes
+    this.dateVerrouillage = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
   }
-  return this.save();
+  await this.save();
 };
 
 // Méthode pour réinitialiser les tentatives
-adminSchema.methods.reinitialiserTentatives = function() {
+Admin.prototype.reinitialiserTentatives = async function() {
   this.tentativesConnexion = 0;
-  this.dateVerrouillage = undefined;
-  return this.save();
+  this.dateVerrouillage = null;
+  await this.save();
 };
 
-module.exports = mongoose.model('Admin', adminSchema);
-
+module.exports = Admin;

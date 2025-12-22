@@ -19,7 +19,8 @@
     "check:statut": "node scripts/check-statut-values.js",
     "migrate:statut": "node migration/fix-statut-enum.js",
     "migrate": "node scripts/migrate.js",
-    "db:migrate:pdf": "node scripts/migratePDFtoDatabase.js"
+    "db:migrate:pdf": "node scripts/migratePDFtoDatabase.js",
+    "init-db": "node scripts/initDatabase.js"
   },
   "keywords": [
     "api",
