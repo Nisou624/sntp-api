@@ -24,7 +24,7 @@ router.post(
     body('titre').trim().notEmpty().withMessage('Le titre est requis'),
     body('description').trim().notEmpty().withMessage('La description est requise'),
     body('datePublication').isISO8601().withMessage('Date de publication invalide'),
-    body('dateLimite').isISO8601().withMessage('Date limite invalide'),
+    body('dateEcheance').isISO8601().withMessage('Date limite invalide'),
     body('statut').isIn(['actif', 'cloture', 'annule']).withMessage('Statut invalide')
   ],
   appelOffreController.createAppelOffre
@@ -39,7 +39,7 @@ router.put(
     body('titre').optional().trim().notEmpty().withMessage('Le titre ne peut pas être vide'),
     body('description').optional().trim().notEmpty().withMessage('La description ne peut pas être vide'),
     body('datePublication').optional().isISO8601().withMessage('Date de publication invalide'),
-    body('dateLimite').optional().isISO8601().withMessage('Date limite invalide'),
+    body('dateEcheance').optional().isISO8601().withMessage('Date limite invalide'),
     body('statut').optional().isIn(['actif', 'cloture', 'annule']).withMessage('Statut invalide')
   ],
   appelOffreController.updateAppelOffre
