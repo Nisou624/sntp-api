@@ -5,7 +5,7 @@ const crypto = require('crypto');
 // Générer un token JWT
 const genererToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '7d'
+    expiresIn: process.env.JWT_EXPIRE || '1d'
   });
 };
 
@@ -135,7 +135,8 @@ exports.login = async (req, res) => {
         role: admin.role,
         permissions: admin.permissions,
         avatar: admin.avatar
-      }
+      },
+      expiresIn: '1d'
     });
   } catch (error) {
     res.status(500).json({
