@@ -332,8 +332,146 @@ const sendMFASuccessEmail = async (email) => {
   }
 };
 
+const sendContactMessage = async ({ nom, email, telephone, sujet, message }) => {
+  const mailOptions = {
+    from: `SNTP - Contact <${process.env.SMTP_USER}>`,
+    to: process.env.CONTACT_EMAIL || 'contact@sntp.dz',
+    replyTo: email,
+    subject: `Contact depuis le site web - ${sujet}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background: linear-gradient(135deg, #DC143C, #B01030);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      border-radius: 10px 10px 0 0;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      background: #f9f9f9;
+      padding: 30px;
+      border: 1px solid #e0e0e0;
+    }
+    .info-section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .info-section h2 {
+      color: #DC143C;
+      font-size: 18px;
+      margin-top: 0;
+      border-bottom: 2px solid #DC143C;
+      padding-bottom: 10px;
+    }
+    .info-row {
+      margin-bottom: 12px;
+    }
+    .info-label {
+      font-weight: bold;
+      color: #666;
+    }
+    .info-value {
+      color: #333;
+      margin-top: 5px;
+    }
+    .message-box {
+      background: #f5f5f5;
+      padding: 20px;
+      border-left: 4px solid #DC143C;
+      margin-top: 15px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+      font-size: 12px;
+      background: #f0f0f0;
+      border-radius: 0 0 10px 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📧 Nouveau Message de Contact</h1>
+    </div>
+    
+    <div class="content">
+      <div class="info-section">
+        <h2>👤 Informations de l'expéditeur</h2>
+        <div class="info-row">
+          <div class="info-label">Nom :</div>
+          <div class="info-value">${nom}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Email :</div>
+          <div class="info-value"><a href="mailto:${email}">${email}</a></div>
+        </div>
+        ${telephone ? `
+        <div class="info-row">
+          <div class="info-label">Téléphone :</div>
+          <div class="info-value">${telephone}</div>
+        </div>
+        ` : ''}
+      </div>
+
+      <div class="info-section">
+        <h2>📋 Sujet</h2>
+        <p><strong>${sujet}</strong></p>
+      </div>
+
+      <div class="info-section">
+        <h2>💬 Message</h2>
+        <div class="message-box">${message.replace(/\n/g, '<br>')}</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p><strong>SNTP - Société Nationale des Travaux Publics</strong></p>
+      <p>Cet email a été envoyé automatiquement depuis le formulaire de contact du site web SNTP.</p>
+      <p>Date de réception : ${new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Algiers' })}</p>
+    </div>
+  </div>
+</body>
+</html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email de contact envoyé à ${email} - ID: ${info.messageId}`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Erreur envoi email contact:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendMFAEmail,
-  sendMFASuccessEmail
+  sendMFASuccessEmail,
+  sendContactMessage
 };
 

@@ -15,6 +15,7 @@ const candidatureRoutes = require('./routes/candidature');
 const articlesRoutes = require('./routes/articles');
 const mfaRoutes = require('./routes/mfa');
 const imageRoutes = require('./routes/images');
+const contactRoutes = require('./routes/contact');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use('/api', candidatureRoutes);
 app.use('/api/articles', articlesRoutes);
 app.use('/api/mfa', mfaRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/contact',contactRoutes);
 
 // Route de test
 app.get('/api/health', (req, res) => {
