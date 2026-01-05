@@ -82,12 +82,9 @@ exports.getImageById = async (req, res) => {
       });
     }
 
-    // Définir les headers pour l'image
-    res.set({
-      'Content-Type': image.mimetype,
-      'Content-Length': image.size,
-      'Cache-Control': 'public, max-age=31536000' // Cache 1 an
-    });
+    // Set correct headers so browser recognizes it as an image
+    res.setHeader('Content-Type', image.type || 'image/jpeg');
+    res.setHeader('Content-Disposition', `inline; filename="image-${id}"`);
 
     res.send(image.data);
   } catch (error) {
