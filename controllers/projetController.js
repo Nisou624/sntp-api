@@ -270,8 +270,8 @@ exports.createProjet = async (req, res) => {
     // Préparer les données du projet
     let query = `
       INSERT INTO projets 
-      (titre, category_id, location, year, status, description, latitude, longitude, imagedata, imageoriginalname, imagemimetype, imagesize)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (titre, category_id, location, year, status, description, latitude, longitude, imagedata, imageoriginalname, imagemimetype, imagesize, createdat, updatedat)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `;
     
     const replacements = [
